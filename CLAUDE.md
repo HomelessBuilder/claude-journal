@@ -42,7 +42,7 @@ claude-journal/
   CURRENT.md              ← current state per project (overwritten each session)
   .claude/
     commands/
-      journal.md           ← /journal slash command
+      handoff.md          ← /handoff slash command — single-session librarian, receives one project's handoff and writes one DEVLOG entry
 ```
 
 ## Migration Note
