@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Log — Claude Journal</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface-raised: #20232f;
+      --border: #2a2d3a;
+      --text: #e2e4ed;
+      --muted: #7a7f96;
+      --accent: #4f8ef7;
+      --tag-technical: #1e3a5f;
+      --tag-technical-text: #7ab8f5;
+      --tag-process: #1e3d2f;
+      --tag-process-text: #6fcf97;
+      --tag-story: #3d2a1e;
+      --tag-story-text: #f2994a;
+      --error: #f2994a;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --font-body: 'Inter', system-ui, sans-serif;
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    header h1 {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      font-weight: 500;
+    }
+
+    nav { display: flex; gap: 1.5rem; align-items: center; }
+
+    nav a {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      padding: 0.3rem 0;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    nav a:hover { color: var(--text); }
+    nav a.current { color: var(--accent); border-bottom-color: var(--accent); }
+
+    #status-line {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    main {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Current status panel */
+    #current-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    #current-panel h2 {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .project-status {
+      margin-bottom: 1.25rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .project-status:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .project-status h3 {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
+    .project-status .field {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 0.25rem 1rem;
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .project-status .field-label {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    /* Log entries */
+    .entry {
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .entry:last-child { border-bottom: none; }
+
+    .entry-header {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .entry-date {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .entry-project {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .entry-status {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .tags {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .tag {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+      font-weight: 600;
+    }
+
+    .tag-technical { background: var(--tag-technical); color: var(--tag-technical-text); }
+    .tag-process   { background: var(--tag-process);   color: var(--tag-process-text); }
+    .tag-story     { background: var(--tag-story);     color: var(--tag-story-text); }
+
+    .entry-body {
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.7;
+      white-space: pre-line;
+    }
+
+    .entry-body strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* Error / loading states */
+    .notice {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--muted);
+      padding: 2rem 0;
+      text-align: center;
+    }
+
+    .error { color: var(--error); }
+
+    #filter-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.04em;
+    }
+
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>~/claude-journal/DEVLOG</h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="devlog.html" class="current">Log</a>
+    <a href="new-entry.html">New Entry</a>
+    <a href="guide.html">Guide</a>
+  </nav>
+  <span id="status-line">loading&hellip;</span>
+</header>
+
+<main>
+  <div id="current-panel">
+    <h2>Current Status</h2>
+    <div id="current-content"><span class="notice">Loading CURRENT.md&hellip;</span></div>
+  </div>
+
+  <div id="filter-bar">
+    <button class="filter-btn active" data-tag="all">All</button>
+    <button class="filter-btn" data-tag="Technical">Technical</button>
+    <button class="filter-btn" data-tag="Process">Process</button>
+    <button class="filter-btn" data-tag="Story">Story</button>
+  </div>
+
+  <div id="entries"></div>
+</main>
+
+<footer>
+  <a href="new-entry.html" style="color: var(--accent); text-decoration: none;">+ Add a new entry</a>
+</footer>
+
+<script>
+  // ── Markdown parser (handles the DEVLOG format used by /log,
+  //    log-session, and the manual entry form) ──────────────
+
+  function parseDevlog(md) {
+    const entries = [];
+    // Split on entry headers: ## YYYY-MM-DD — Title
+    const blocks = md.split(/(?=^## \d{4}-\d{2}-\d{2})/m).filter(b => b.trim());
+
+    for (const block of blocks) {
+      const lines = block.split('\n');
+      const header = lines[0].match(/^## (\d{4}-\d{2}-\d{2})\s+[—–-]+\s+(.+)/);
+      if (!header) continue;
+
+      const date = header[1];
+      const title = header[2].trim();
+
+      let project = '';
+      let status = '';
+      let tags = [];
+      const bodyLines = [];
+      let pastMetadata = false;
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        if (trimmed === '---') break;
+
+        if (!pastMetadata) {
+          if (line.startsWith('**Project:**')) {
+            project = line.replace('**Project:**', '').trim();
+            continue;
+          }
+          if (line.startsWith('**Status:**')) {
+            status = line.replace('**Status:**', '').trim();
+            continue;
+          }
+          if (line.startsWith('**Tags:**')) {
+            const tagStr = line.replace('**Tags:**', '');
+            tags = [...tagStr.matchAll(/\[(\w+)\]/g)].map(m => m[1]);
+            continue;
+          }
+          // First line that isn't a recognized metadata field starts the body
+          if (trimmed !== '') {
+            pastMetadata = true;
+          }
+        }
+
+        if (pastMetadata) {
+          bodyLines.push(line);
+        }
+      }
+
+      // Collapse the body's own field labels (What happened / Outcome /
+      // etc.) into bold inline labels rather than dropping them.
+      const body = bodyLines
+        .join('\n')
+        .replace(/\*\*(.+?):\*\*/g, '<strong>$1:</strong>')
+        .trim();
+
+      entries.push({ date, title, project, status, tags, body });
+    }
+
+    return entries;
+  }
+
+  function parseCurrent(md) {
+    const projects = [];
+    const blocks = md.split(/(?=^## )/m).filter(b => b.trim() && b.startsWith('##'));
+
+    for (const block of blocks) {
+      const lines = block.split('\n');
+      const name = lines[0].replace(/^##\s*/, '').trim();
+      const fields = {};
+
+      for (const line of lines.slice(1)) {
+        const m = line.match(/^\*\*(.+?):\*\*\s*(.+)/);
+        if (m) fields[m[1]] = m[2].trim();
+        if (line.trim() === '---') break;
+      }
+
+      if (name && Object.keys(fields).length) projects.push({ name, fields });
+    }
+
+    return projects;
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────
+
+  function renderTags(tags) {
+    return tags.map(t => {
+      const cls = t.toLowerCase();
+      return `<span class="tag tag-${cls}">${t}</span>`;
+    }).join('');
+  }
+
+  function renderEntries(entries) {
+    if (!entries.length) return '<p class="notice">No entries match.</p>';
+    return entries.map(e => `
+      <div class="entry" data-tags="${e.tags.join(' ')}">
+        <div class="entry-header">
+          <span class="entry-date">${e.date}</span>
+          <span class="entry-project">${e.project || e.title}</span>
+        </div>
+        ${e.project ? `<div class="entry-status" style="font-weight:600; color: var(--text);">${e.title}</div>` : ''}
+        ${e.status ? `<div class="entry-status">${e.status}</div>` : ''}
+        ${e.tags.length ? `<div class="tags">${renderTags(e.tags)}</div>` : ''}
+        <div class="entry-body">${e.body}</div>
+      </div>
+    `).join('');
+  }
+
+  function renderCurrent(projects) {
+    if (!projects.length) return '<p class="notice">No project status found in CURRENT.md</p>';
+    return projects.map(p => {
+      const fields = Object.entries(p.fields).map(([k, v]) => `
+        <div class="field">
+          <span class="field-label">${k}</span>
+          <span>${v}</span>
+        </div>
+      `).join('');
+      return `
+        <div class="project-status">
+          <h3>${p.name}</h3>
+          ${fields}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── Filtering ────────────────────────────────────────────────────────────
+
+  let allEntries = [];
+  let activeTag = 'all';
+
+  function applyFilter(tag) {
+    activeTag = tag;
+    const container = document.getElementById('entries');
+    const filtered = tag === 'all'
+      ? allEntries
+      : allEntries.filter(e => e.tags.includes(tag));
+    container.innerHTML = renderEntries(filtered);
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tag === tag);
+    });
+  }
+
+  document.getElementById('filter-bar').addEventListener('click', e => {
+    if (e.target.classList.contains('filter-btn')) {
+      applyFilter(e.target.dataset.tag);
+    }
+  });
+
+  // ── Load files ───────────────────────────────────────────────────────────
+
+  async function loadFile(path) {
+    const res = await fetch(path);
+    if (!res.ok) throw new Error(`${path} returned ${res.status}`);
+    return res.text();
+  }
+
+  async function init() {
+    const statusLine = document.getElementById('status-line');
+    const entriesEl  = document.getElementById('entries');
+    const currentEl  = document.getElementById('current-content');
+
+    try {
+      const devlogMd = await loadFile('DEVLOG.md');
+
+      // CURRENT.md is optional — don't fail the whole page if it's missing
+      let currentMd = '';
+      try {
+        currentMd = await loadFile('CURRENT.md');
+      } catch (e) {
+        currentEl.innerHTML = '<p class="notice">No CURRENT.md found yet.</p>';
+      }
+
+      if (currentMd) {
+        const projects = parseCurrent(currentMd);
+        currentEl.innerHTML = renderCurrent(projects);
+      }
+
+      allEntries = parseDevlog(devlogMd);
+      entriesEl.innerHTML = renderEntries(allEntries);
+
+      const lastUpdated = currentMd.match(/\*Last updated:\s*(.+?)\*/);
+      statusLine.textContent = lastUpdated
+        ? `last updated ${lastUpdated[1]}`
+        : `${allEntries.length} entries`;
+
+    } catch (err) {
+      statusLine.textContent = 'error loading files';
+      entriesEl.innerHTML = `<p class="notice error">
+        Could not load DEVLOG.md.<br>
+        Make sure you're serving this from the ~/claude-journal/ directory.<br><br>
+        Run: <code>python3 journal_server.py</code><br>
+        Then open: <code>http://localhost:4242/devlog.html</code>
+      </p>`;
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>

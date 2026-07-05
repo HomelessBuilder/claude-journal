@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Entry — Claude Journal</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface-raised: #20232f;
+    --border: #2a2d3a;
+    --text: #e2e4ed;
+    --muted: #7a7f96;
+    --accent: #4f8ef7;
+    --accent-dim: #2a3f63;
+    --tag-technical: #1e3a5f;
+    --tag-technical-text: #7ab8f5;
+    --tag-process: #1e3d2f;
+    --tag-process-text: #6fcf97;
+    --tag-story: #3d2a1e;
+    --tag-story-text: #f2994a;
+    --error: #f2994a;
+    --success: #6fcf97;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  header h1 {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+  nav { display: flex; gap: 1.5rem; }
+  nav a {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.03em;
+    padding: 0.3rem 0;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  nav a:hover { color: var(--text); }
+  nav a.current { color: var(--accent); border-bottom-color: var(--accent); }
+
+  main { max-width: 680px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
+
+  .page-intro { margin-bottom: 2rem; }
+  .page-intro .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .page-intro h2 { font-size: 1.5rem; font-weight: 650; margin-bottom: 0.5rem; }
+  .page-intro p { color: var(--muted); font-size: 0.92rem; }
+
+  form { display: flex; flex-direction: column; gap: 22px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+  label .req { color: var(--accent); margin-left: 2px; }
+  label .opt { color: var(--muted); font-weight: 400; font-style: italic; }
+
+  input[type="text"], input[type="date"], textarea {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    padding: 11px 13px;
+    width: 100%;
+    transition: border-color 0.15s ease;
+  }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+  input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+
+  .char-count { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); text-align: right; }
+
+  .tags { display: flex; gap: 10px; flex-wrap: wrap; }
+  .tag-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 7px 14px 7px 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .tag-option:has(input:checked) { border-color: var(--accent); background: var(--accent-dim); }
+  .tag-option input { accent-color: var(--accent); }
+
+  .project-select { display: flex; gap: 8px; flex-wrap: wrap; }
+  .project-option {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-family: var(--font-mono);
+    color: var(--muted);
+  }
+  .project-option:has(input:checked) { border-color: var(--accent); color: var(--text); background: var(--accent-dim); }
+  .project-option input { display: none; }
+
+  .error-msg { font-size: 0.82rem; color: var(--error); min-height: 1.2em; }
+
+  .submit-row { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
+  button.commit {
+    background: var(--accent);
+    color: #0b0d12;
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 650;
+    font-size: 0.95rem;
+    padding: 12px 22px;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  button.commit:hover { opacity: 0.88; }
+  button.commit:active { opacity: 0.75; }
+  button.commit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .status {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    display: none;
+  }
+  .status.show { display: block; }
+  .status.success { background: rgba(111, 207, 151, 0.12); color: var(--success); border: 1px solid rgba(111, 207, 151, 0.3); }
+  .status.error { background: rgba(242, 153, 74, 0.12); color: var(--error); border: 1px solid rgba(242, 153, 74, 0.3); }
+
+  .output-block { margin-top: 28px; display: none; }
+  .output-block.show { display: block; }
+  .output-block h2 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 10px;
+  }
+  pre.output {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    color: var(--text);
+    margin: 0;
+  }
+  .copy-hint { font-size: 0.78rem; color: var(--muted); margin-top: 8px; }
+  .copy-hint code {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-family: var(--font-mono);
+  }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    text-align: center;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>~/claude-journal/</h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="devlog.html">Log</a>
+    <a href="new-entry.html" class="current">New Entry</a>
+    <a href="guide.html">Guide</a>
+  </nav>
+</header>
+
+<main>
+  <div class="page-intro">
+    <div class="eyebrow">manual entry</div>
+    <h2>New log entry</h2>
+    <p>Written directly by you. No AI summarization, no review step &mdash; this writes straight to DEVLOG.md via the local journal server.</p>
+  </div>
+
+  <form id="entryForm" novalidate>
+
+    <div class="field">
+      <label>Project <span class="req">*</span></label>
+      <div class="project-select" id="projectSelect">
+        <label class="project-option"><input type="radio" name="project" value="my-eleventy-sdai-h" checked>my-eleventy-sdai-h</label>
+        <label class="project-option"><input type="radio" name="project" value="claude-journal">claude-journal</label>
+        <label class="project-option"><input type="radio" name="project" value="other">other&hellip;</label>
+      </div>
+      <input type="text" id="projectOther" placeholder="project folder name" style="display:none; margin-top:6px;">
+    </div>
+
+    <div class="field">
+      <label for="entryDate">Date <span class="req">*</span></label>
+      <input type="date" id="entryDate" required>
+    </div>
+
+    <div class="field">
+      <label for="entryTitle">Title <span class="opt">(short, plain language)</span> <span class="req">*</span></label>
+      <input type="text" id="entryTitle" maxlength="120" placeholder="e.g. Fixed the hero typography, finally felt calm doing it" required>
+      <div class="char-count"><span id="titleCount">0</span>/120</div>
+    </div>
+
+    <div class="field">
+      <label for="entryWhat">What happened <span class="req">*</span></label>
+      <textarea id="entryWhat" maxlength="2000" placeholder="Plain language, a few sentences." required></textarea>
+      <div class="char-count"><span id="whatCount">0</span>/2000</div>
+    </div>
+
+    <div class="field">
+      <label for="entryObstacles">Obstacles hit <span class="opt">(optional &mdash; leave blank if nothing notable)</span></label>
+      <textarea id="entryObstacles" maxlength="2000" placeholder="Real problems and how they were resolved."></textarea>
+      <div class="char-count"><span id="obstaclesCount">0</span>/2000</div>
+    </div>
+
+    <div class="field">
+      <label for="entryLearned">What was learned <span class="opt">(optional)</span></label>
+      <textarea id="entryLearned" maxlength="2000" placeholder="The transferable lesson, if there was one."></textarea>
+      <div class="char-count"><span id="learnedCount">0</span>/2000</div>
+    </div>
+
+    <div class="field">
+      <label for="entryOutcome">Outcome <span class="req">*</span></label>
+      <textarea id="entryOutcome" maxlength="1000" placeholder="State at the end of the session: what exists, what's committed, what's open." required></textarea>
+      <div class="char-count"><span id="outcomeCount">0</span>/1000</div>
+    </div>
+
+    <div class="field">
+      <label for="entryCommits">Related commits <span class="opt">(optional &mdash; one per line, e.g. "5da4105 — added guide/form/server files")</span></label>
+      <textarea id="entryCommits" maxlength="600" placeholder="5da4105 — added guide/form/server files
+caca9d5 — unified design, added index.html, fixed parser bug"></textarea>
+      <div class="char-count"><span id="commitsCount">0</span>/600</div>
+    </div>
+
+    <div class="field">
+      <label>Tags <span class="opt">(pick at least one)</span></label>
+      <div class="tags">
+        <label class="tag-option"><input type="checkbox" name="tag" value="Technical">Technical</label>
+        <label class="tag-option"><input type="checkbox" name="tag" value="Process">Process</label>
+        <label class="tag-option"><input type="checkbox" name="tag" value="Story">Story</label>
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="submit-row">
+      <button type="submit" class="commit">Commit entry</button>
+    </div>
+
+    <div class="status" id="statusMsg"></div>
+  </form>
+
+  <div class="output-block" id="outputBlock">
+    <h2>Generated entry</h2>
+    <pre class="output" id="outputText"></pre>
+    <div class="copy-hint">This was written to DEVLOG.md. Commit it from the terminal when you're ready: <code>cd ~/claude-journal &amp;&amp; git add DEVLOG.md &amp;&amp; git commit -m "..."</code></div>
+  </div>
+</main>
+
+<footer>
+  <a href="devlog.html" style="color: var(--accent); text-decoration: none;">&larr; Back to the log</a>
+</footer>
+
+<script>
+(function () {
+  const form = document.getElementById('entryForm');
+  const projectOptions = document.querySelectorAll('input[name="project"]');
+  const projectOtherInput = document.getElementById('projectOther');
+  const errorMsg = document.getElementById('errorMsg');
+  const statusMsg = document.getElementById('statusMsg');
+  const outputBlock = document.getElementById('outputBlock');
+  const outputText = document.getElementById('outputText');
+
+  // default date to today, using LOCAL time (not UTC, which would roll
+  // the date forward in the evening for anyone west of UTC)
+  function getLocalDateString() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+  const dateInput = document.getElementById('entryDate');
+  const today = new Date();
+  dateInput.value = getLocalDateString();
+
+  // live char counters
+  function wireCounter(fieldId, countId) {
+    const field = document.getElementById(fieldId);
+    const count = document.getElementById(countId);
+    field.addEventListener('input', () => { count.textContent = field.value.length; });
+  }
+  wireCounter('entryTitle', 'titleCount');
+  wireCounter('entryWhat', 'whatCount');
+  wireCounter('entryObstacles', 'obstaclesCount');
+  wireCounter('entryLearned', 'learnedCount');
+  wireCounter('entryOutcome', 'outcomeCount');
+  wireCounter('entryCommits', 'commitsCount');
+
+  // show/hide "other" project name field
+  projectOptions.forEach(opt => {
+    opt.addEventListener('change', () => {
+      projectOtherInput.style.display = opt.value === 'other' && opt.checked ? 'block' : 'none';
+    });
+  });
+
+  // Note: input sanitization happens server-side in journal_server.py,
+  // which is the actual safety boundary (client-side checks can always
+  // be bypassed by a direct request to the server). This page only does
+  // user-facing validation for a better experience before submitting.
+
+  function getProjectName() {
+    const selected = document.querySelector('input[name="project"]:checked');
+    if (selected.value === 'other') {
+      return projectOtherInput.value.trim();
+    }
+    return selected.value;
+  }
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    errorMsg.textContent = '';
+    statusMsg.className = 'status';
+    statusMsg.textContent = '';
+
+    const project = getProjectName();
+    const date = dateInput.value;
+    const title = document.getElementById('entryTitle').value.trim();
+    const what = document.getElementById('entryWhat').value.trim();
+    const obstacles = document.getElementById('entryObstacles').value.trim();
+    const learned = document.getElementById('entryLearned').value.trim();
+    const outcome = document.getElementById('entryOutcome').value.trim();
+    const commits = document.getElementById('entryCommits').value.trim();
+    const tags = Array.from(document.querySelectorAll('input[name="tag"]:checked')).map(t => t.value);
+
+    // --- Client-side validation (the server re-checks all of this too,
+    // since client-side checks can always be bypassed) ---
+    const errors = [];
+    if (!project) errors.push('Project name is required.');
+    if (!date) errors.push('Date is required.');
+    if (!title) errors.push('Title is required.');
+    if (!what) errors.push('"What happened" is required.');
+    if (!outcome) errors.push('"Outcome" is required.');
+    if (tags.length === 0) errors.push('Pick at least one tag.');
+
+    if (errors.length > 0) {
+      errorMsg.textContent = errors.join(' ');
+      return;
+    }
+
+    const payload = { project, date, title, what, obstacles, learned, outcome, commits, tags };
+
+    const submitBtn = form.querySelector('button.commit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Writing…';
+
+    try {
+      const response = await fetch('/api/new-entry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        statusMsg.className = 'status show error';
+        statusMsg.textContent = 'Server rejected the entry: ' + (result.error || 'unknown error');
+        return;
+      }
+
+      outputText.textContent = result.entry;
+      outputBlock.classList.add('show');
+
+      statusMsg.className = 'status show success';
+      statusMsg.textContent = 'Written to DEVLOG.md. Remember to commit it from the terminal: cd ~/claude-journal && git add DEVLOG.md && git commit -m "..."';
+
+      form.reset();
+      dateInput.value = getLocalDateString();
+      document.querySelectorAll('.char-count span').forEach(el => el.textContent = '0');
+
+      outputBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      statusMsg.className = 'status show error';
+      statusMsg.textContent = 'Could not reach the server. Is journal_server.py running?';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Commit entry';
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

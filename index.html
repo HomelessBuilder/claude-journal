@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Journal</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface-raised: #20232f;
+    --border: #2a2d3a;
+    --text: #e2e4ed;
+    --muted: #7a7f96;
+    --accent: #4f8ef7;
+    --tag-technical: #1e3a5f;
+    --tag-technical-text: #7ab8f5;
+    --tag-process: #1e3d2f;
+    --tag-process-text: #6fcf97;
+    --tag-story: #3d2a1e;
+    --tag-story-text: #f2994a;
+    --error: #f2994a;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --radius: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  header h1 {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+
+  nav {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  nav a {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.03em;
+    padding: 0.3rem 0;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  nav a:hover { color: var(--text); }
+  nav a.current { color: var(--accent); border-bottom-color: var(--accent); }
+
+  main {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .hero {
+    padding: 2.5rem 0 3rem;
+  }
+
+  .hero .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+
+  .hero h2 {
+    font-size: 1.7rem;
+    font-weight: 650;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.01em;
+  }
+
+  .hero p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    max-width: 540px;
+  }
+
+  .card-grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .nav-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    text-decoration: none;
+    color: var(--text);
+    display: block;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .nav-card:hover {
+    border-color: var(--accent);
+    background: var(--surface-raised);
+  }
+
+  .nav-card .card-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .nav-card h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+
+  .nav-card p {
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  #status-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-top: 2.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  #status-panel .status-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    color: var(--muted);
+  }
+
+  #status-panel a { color: var(--accent); text-decoration: none; }
+  #status-panel a:hover { text-decoration: underline; }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    text-align: center;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>~/claude-journal/</h1>
+  <nav>
+    <a href="index.html" class="current">Home</a>
+    <a href="devlog.html">Log</a>
+    <a href="new-entry.html">New Entry</a>
+    <a href="guide.html">Guide</a>
+  </nav>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="eyebrow">Documentation system</div>
+    <h2>The record of how this got built</h2>
+    <p>A running journal of real sessions: what happened, what broke, what
+    was learned. Captured automatically through Claude Code, or written
+    directly when a session was just a conversation.</p>
+  </div>
+
+  <div class="card-grid">
+    <a href="devlog.html" class="nav-card">
+      <div class="card-label">Read</div>
+      <h3>The Log</h3>
+      <p>Every session so far, newest first. Filter by Technical, Process, or Story.</p>
+    </a>
+    <a href="new-entry.html" class="nav-card">
+      <div class="card-label">Write</div>
+      <h3>New Entry</h3>
+      <p>Add a session directly &mdash; no AI summarization, written in your own words.</p>
+    </a>
+    <a href="guide.html" class="nav-card">
+      <div class="card-label">Reference</div>
+      <h3>System Guide</h3>
+      <p>How the whole thing works, the scripts involved, and how to troubleshoot it.</p>
+    </a>
+  </div>
+
+  <div id="status-panel">
+    <div class="status-label">Quick status</div>
+    <span id="status-text">Loading&hellip;</span>
+  </div>
+</main>
+
+<footer>
+  Last updated 2026-06-23
+</footer>
+
+<script>
+  async function loadStatus() {
+    const el = document.getElementById('status-text');
+    try {
+      const res = await fetch('DEVLOG.md');
+      if (!res.ok) throw new Error('not found');
+      const text = await res.text();
+      const entryCount = (text.match(/^## \d{4}-\d{2}-\d{2}/gm) || []).length;
+      const firstDate = text.match(/^## (\d{4}-\d{2}-\d{2})/m);
+      el.innerHTML = `${entryCount} entries logged` +
+        (firstDate ? ` &middot; most recent ${firstDate[1]}` : '') +
+        ` &middot; <a href="devlog.html">view the log &rarr;</a>`;
+    } catch (e) {
+      el.textContent = 'Could not load DEVLOG.md — make sure this is served, not opened as a file.';
+    }
+  }
+  loadStatus();
+</script>
+
+</body>
+</html>
